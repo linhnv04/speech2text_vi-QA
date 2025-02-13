@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Recorder</title>
+</head>
+<body>
+    <h1>Record Audio and Get Response</h1>
+    <button id="recordBtn">Record</button>
+    <button id="stopBtn" style="display: none;">Stop</button>
+    <p id="status">Press "Record" to start recording.</p>
+    <div id="response">Response: </div>
+
+    <script>
+        const recordBtn = document.getElementById('recordBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const status = document.getElementById('status');
+        const responseElem = document.getElementById('response');
+
+        let mediaRecorder;
+        let audioChunks = [];
+
+        recordBtn.addEventListener('click', async () => {
+            // Start recording audio
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            
+            mediaRecorder.ondataavailable = event => {
+                audioChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                const audioFile = new File([audioBlob], 'audio.wav', { type: 'audio/wav' });
+                
+                // Send the audio file to the API
+                const formData = new FormData();
+                formData.append('audio', audioFile);
+                
+                const response = await fetch('http://127.0.0.1:8000/transcribe_and_respond/', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'accept': 'application/json',
+                    },
+                });
+
+                // Check if the response is OK (status 200)
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log("Received data:", data);  // Debugging step: check if we get the response
+                    
+                    // Display the response as raw markdown text
+                    responseElem.textContent = `Response: ${data.response}`;
+                } else {
+                    responseElem.textContent = `Error: Failed to get response from server.`;
+                }
+            };
+
+            mediaRecorder.start();
+            status.textContent = 'Recording...';
+            recordBtn.style.display = 'none';
+            stopBtn.style.display = 'inline-block';
+        });
+
+        stopBtn.addEventListener('click', () => {
+            // Stop recording
+            mediaRecorder.stop();
+            status.textContent = 'Processing audio...';
+            recordBtn.style.display = 'inline-block';
+            stopBtn.style.display = 'none';
+        });
+    </script>
+</body>
+</html>
