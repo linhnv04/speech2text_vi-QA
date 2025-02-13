@@ -6,6 +6,10 @@ __pycache__/
 # C extensions
 *.so
 
+#constants file
+constants.py
+
+
 # Distribution / packaging
 .Python
 build/
