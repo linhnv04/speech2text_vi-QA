@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Recorder</title>
+</head>
+<body>
+    <h1>Record or Upload Audio and Get Response</h1>
+    <button id="recordBtn">Record</button>
+    <button id="stopBtn" style="display: none;">Stop</button>
+    <input type="file" id="fileInput" accept="audio/*">
+    <p id="status">Press "Record" to start recording or upload a file.</p>
+    <div id="response">Response: </div>
+
+    <script>
+        const recordBtn = document.getElementById('recordBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const fileInput = document.getElementById('fileInput');
+        const status = document.getElementById('status');
+        const responseElem = document.getElementById('response');
+
+        let mediaRecorder;
+        let audioChunks = [];
+
+        recordBtn.addEventListener('click', async () => {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            
+            mediaRecorder.ondataavailable = event => {
+                audioChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                sendAudioToServer(audioBlob);
+            };
+
+            mediaRecorder.start();
+            status.textContent = 'Recording...';
+            recordBtn.style.display = 'none';
+            stopBtn.style.display = 'inline-block';
+        });
+
+        stopBtn.addEventListener('click', () => {
+            mediaRecorder.stop();
+            status.textContent = 'Processing audio...';
+            recordBtn.style.display = 'inline-block';
+            stopBtn.style.display = 'none';
+        });
+
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                sendAudioToServer(file);
+            }
+        });
+
+        async function sendAudioToServer(audioFile) {
+            const formData = new FormData();
+            formData.append('audio', audioFile);
+            
+            status.textContent = 'Uploading...';
+            const response = await fetch('http://0.0.0.0:8000/transcribe_and_respond/', {
+                method: 'POST',
+                body: formData,
+                headers: { 'accept': 'application/json' },
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                responseElem.textContent = `Response: ${data.response}`;
+            } else {
+                responseElem.textContent = `Error: Failed to get response from server.`;
+            }
+            status.textContent = 'Done';
+        }
+    </script>
+</body>
+</html>

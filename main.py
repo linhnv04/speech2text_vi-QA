@@ -10,17 +10,18 @@ from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
 
 origins = [
-    "http://localhost",  # Localhost (if you open from localhost in browser)
-    "http://127.0.0.1",  # Local IP
-    "*",  # Allow all origins (use with caution, more restrictive settings are recommended for production)
+    "http://localhost",  
+    "http://127.0.0.1", 
+    "http://0.0.0.0" 
+    "*",  
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # Allow all origins or specify specific domains
+    allow_origins=origins,  
     allow_credentials=True,
-    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
-    allow_headers=["*"],  # Allow all headers
+    allow_methods=["*"],  
+    allow_headers=["*"],  
 )
 
 
@@ -36,6 +37,7 @@ async def transcribe_and_respond(audio: UploadFile = File(...)):
             buffer.write(await audio.read())
 
         text = transcript("./cache/temp_audio_file")
+        print(text)
         
         response = gemini_ans(text)
         print(response)
