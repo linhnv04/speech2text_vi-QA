@@ -12,16 +12,16 @@ app = FastAPI()
 origins = [
     "http://localhost",  
     "http://127.0.0.1", 
-    "http://0.0.0.0" 
+    "http://0.0.0.0", 
     "*",  
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Change this to your frontend URL, e.g., "http://127.0.0.1:5500"
+    allow_origins=["*"],  
     allow_credentials=True,
-    allow_methods=["*"],  # Allow all HTTP methods
-    allow_headers=["*"],  # Allow all headers
+    allow_methods=["*"],  
+    allow_headers=["*"], 
 )
 
 AUDIO_FILE_PATH = os.path.join("./cache", "temp_audio_file.wav")

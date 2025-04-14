@@ -14,5 +14,5 @@ def gemini_ans(info_ques, sys_prompt=sys_prompt):
     answer = response_data["candidates"][0]["content"]["parts"][0]["text"]
     return answer
 
-# print(gemini_ans("thời tiết hôm nay thế nào?"))
+print(gemini_ans("con người có bao nhiêu thầy rằng. Sủa lại câu trên cho có nghĩa"))
 
